@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: edge
+
+hivemq:
+  uri: tcp://localhost:1883
+  topic: steptrack
