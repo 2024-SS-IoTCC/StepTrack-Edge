@@ -2,6 +2,11 @@ spring:
   application:
     name: edge
 
-hivemq:
-  uri: tcp://localhost:1883
+mqtt:
+  broker:
+    url: tcp://localhost:1883
   topic: steptrack
+
+dashboard:
+  api:
+    url: http://174.138.68.148
