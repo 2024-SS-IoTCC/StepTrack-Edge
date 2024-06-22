@@ -1,25 +1,21 @@
 package at.aau.streptrack.edge;
 
-import at.aau.streptrack.edge.model.CloudData;
 import at.aau.streptrack.edge.model.SensorData;
+import at.aau.streptrack.edge.openapi.StepsApi;
+import at.aau.streptrack.edge.openapi.model.MainStepData;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
 
 @Service
 public class DataService {
   private static final Logger log = LoggerFactory.getLogger(DataService.class);
 
-  private final RestClient restClient;
+  private final StepsApi stepsApi;
 
-  @Value("${dashboard.api.url}")
-  private String apiUrl;
-
-  public DataService() {
-    restClient = RestClient.create(apiUrl);
+  public DataService(StepsApi stepsApi) {
+    this.stepsApi = stepsApi;
   }
 
   public void processAndSendData(String payload) {
@@ -29,18 +25,24 @@ public class DataService {
       return;
     }
 
-    Optional<CloudData> stepDataCloud = StepDataTransformer.transform(stepDataSensor.get());
+    Optional<MainStepData> mainStepDataOptional =
+        StepDataTransformer.transform(stepDataSensor.get());
 
-    if (stepDataCloud.isEmpty()) {
+    if (mainStepDataOptional.isEmpty()) {
       return;
     }
 
+    MainStepData mainStepData = mainStepDataOptional.get();
+
     try {
-      restClient.post().uri("/api/steps").body(stepDataCloud.get()).retrieve().toBodilessEntity();
+      log.info("Sending step data to cloud...");
+      stepsApi.stepsPost(mainStepData);
     } catch (Exception e) {
-      log.error("Error sending step data", e);
+      log.error("Error sending step data; abort - [stepData='{}']", mainStepData, e);
+
+      return;
     }
 
-    log.info("Data posted successfully");
+    log.info("Step data sent successfully - [stepData='{}']", mainStepData);
   }
 }

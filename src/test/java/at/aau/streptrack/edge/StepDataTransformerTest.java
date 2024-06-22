@@ -54,5 +54,5 @@ class StepDataTransformerTest {
   void calculateTotalSteps() {}
 
   @Test
-  void convertTimestampToDateTime() {}
+  void formatDateTime() {}
 }

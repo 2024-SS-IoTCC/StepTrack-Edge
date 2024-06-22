@@ -1,6 +1,8 @@
 spring:
   application:
     name: edge
+  config:
+    import: optional:classpath:application-secrets.yaml
 
 mqtt:
   broker:
@@ -9,4 +11,4 @@ mqtt:
 
 dashboard:
   api:
-    url: http://174.138.68.148
+    url: http://localhost:8080

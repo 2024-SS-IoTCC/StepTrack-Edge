@@ -1,12 +1,13 @@
 package at.aau.streptrack.edge;
 
-import at.aau.streptrack.edge.model.CloudData;
 import at.aau.streptrack.edge.model.SensorData;
 import at.aau.streptrack.edge.model.StepEvent;
+import at.aau.streptrack.edge.openapi.model.MainStepData;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -22,6 +23,8 @@ public final class StepDataTransformer {
 
   public static Optional<SensorData> parsePayload(String payload) {
     try {
+      log.info("Parsing payload...");
+
       return Optional.ofNullable(MAPPER.readValue(payload, SensorData.class));
     } catch (Exception e) {
       log.error("Error parsing payload; return empty", e);
@@ -30,7 +33,8 @@ public final class StepDataTransformer {
     }
   }
 
-  public static Optional<CloudData> transform(SensorData sensorData) {
+  public static Optional<MainStepData> transform(SensorData sensorData) {
+    log.info("Transforming sensor data...");
     var username = sensorData.username();
 
     if (StringUtils.isBlank(username)) {
@@ -59,16 +63,21 @@ public final class StepDataTransformer {
       return Optional.empty();
     }
 
+    log.info("Calculating dates and steps...");
     StepEvent firstStepEvent = stepEvents.getFirst();
     StepEvent lastStepEvent = stepEvents.getLast();
     var totalSteps = lastStepEvent.steps() - firstStepEvent.steps();
-    var startTime = convertTimestampToDateTime(firstStepEvent.timestamp());
-    var endTime = convertTimestampToDateTime(lastStepEvent.timestamp());
+    var startTime = formatDateTime(firstStepEvent.timestamp());
+    var endTime = formatDateTime(lastStepEvent.timestamp());
 
-    return Optional.of(CloudData.of(username, totalSteps, startTime, endTime));
+    var mainStepData =
+        new MainStepData().username(username).steps(totalSteps).start(startTime).end(endTime);
+
+    return Optional.of(mainStepData);
   }
 
-  public static LocalDateTime convertTimestampToDateTime(long timestamp) {
-    return LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault());
+  public static String formatDateTime(long timestamp) {
+    return LocalDateTime.ofInstant(Instant.ofEpochMilli(timestamp), ZoneId.systemDefault())
+        .format(DateTimeFormatter.ISO_DATE_TIME);
   }
 }
