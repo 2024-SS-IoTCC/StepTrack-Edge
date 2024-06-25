@@ -1,9 +1,10 @@
 package at.aau.streptrack.edge;
 
 import at.aau.streptrack.edge.model.SensorData;
-import at.aau.streptrack.edge.openapi.StepsApi;
-import at.aau.streptrack.edge.openapi.model.MainStepData;
 import java.util.Optional;
+
+import org.openapitools.client.api.StepsApi;
+import org.openapitools.client.model.MainStepData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
